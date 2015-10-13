@@ -1,24 +1,22 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: figure/
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading the data
-```{r}
+
+```r
 file.location<-paste(getwd(),"/activity.csv", sep="")
 activity<-read.csv(file.location, header=TRUE, colClasses=c("integer", "Date", "integer"))
 ```
 
 ## What is mean total number of steps taken per day?
 
-```{r, message=FALSE}
+
+```r
 library(dplyr)
 ```
 
-```{r}
+
+```r
 daily.activities<-select(activity, 2:1)
 steps.per.day<-aggregate(daily.activities$steps, by=list(daily.activities$date), FUN=sum)
 names(steps.per.day)<-c("date", "steps")
@@ -27,33 +25,43 @@ median.per.day<-median(steps.per.day$steps, na.rm=TRUE)
 plot(y=steps.per.day$steps, type="h", x=steps.per.day$date, ylab="Steps (total)", xlab="Day", lwd=5, col="red", main="Histogram of steps per day")
 ```
 
-The daily average is `r mean.per.day`. 
-The daily median is `r median.per.day`.  
+![](figure/unnamed-chunk-3-1.png) 
+
+The daily average is 1.0766189\times 10^{4}. 
+The daily median is 10765.  
 
 
 ## What is the average daily activity pattern?
 
-```{r}
+
+```r
 interval.activities<-select(activity, -2)
 interval.activities<-na.exclude(interval.activities)
 steps.per.interval<-aggregate(interval.activities$steps, by=list(interval.activities$interval), FUN=mean)
 names(steps.per.interval)<-c("interval", "steps")
 plot(y=steps.per.interval$steps, type="l", x=steps.per.interval$interval, ylab="Steps (average)", xlab="Interval (x5min)", lwd=1, col="blue", main="Average daily pattern")
+```
+
+![](figure/unnamed-chunk-4-1.png) 
+
+```r
 max.interval<-steps.per.interval$interval[steps.per.interval$steps==max(steps.per.interval$steps)]
 ```
 
-The most active interval was `r max.interval`.
+The most active interval was 835.
 
 ## Imputing missing values
 
-```{r}
+
+```r
 missing.data<-sum(is.na(activity))
 ```
-The number rows with NAs was `r missing.data`.
+The number rows with NAs was 2304.
 
 
 Filling in the data by adding previously calculated means for every interval instead of NA.
-```{r}
+
+```r
 na.activity<-filter(activity, is.na(steps))
 compensated.activity<-left_join(select(na.activity, 2:3), steps.per.interval, by="interval")
 compensated.activity <- select(compensated.activity, c(3,1,2)) 
@@ -68,19 +76,23 @@ compensated.median.per.day<-median(compensated.steps.per.day$steps, na.rm=TRUE)
 plot(y=compensated.steps.per.day$steps, type="h", x=compensated.steps.per.day$date, ylab="Steps (total)", xlab="Day", lwd=5, col="red", main="Histogram of steps per day (compensated)")
 ```
 
-The *compensated* daily average is `r compensated.mean.per.day`. The *compensated* daily median is `r compensated.median.per.day`.
+![](figure/unnamed-chunk-6-1.png) 
 
-```{r}
+The *compensated* daily average is 1.0766189\times 10^{4}. The *compensated* daily median is 1.0766189\times 10^{4}.
+
+
+```r
 difference.mean.per.day<-compensated.mean.per.day-mean.per.day
 difference.median.per.day<-compensated.median.per.day-median.per.day
 ```
 
-The difference in daily averages is `r difference.mean.per.day`.
-The difference in daily medians is `r difference.median.per.day`
+The difference in daily averages is 0.
+The difference in daily medians is 1.1886792
 
 ## Are there differences in activity patterns between weekdays and weekends?
 Yes, we can see some differences on the plot - the main difference seems to be that the active period occurs earlier on weekdays.
-```{r panel plot, fig.height=7}
+
+```r
 week.days<-c("Monday","Tuesday", "Wednesday","Thursday","Friday")
 week.ends<-c("Saturday","Sunday")
 patterns.activity<-mutate(compensated.activity, days=factor(weekdays(date)))
@@ -97,4 +109,6 @@ par(mfrow=c(2,1))
 plot(y=week.ends.steps.per.interval$mean, type="l", x=week.ends.steps.per.interval$interval, ylab="Steps (average)", xlab="Interval (x5min)", lwd=1, col="blue", main="weekend")
 plot(y=week.days.steps.per.interval$mean, type="l", x=week.days.steps.per.interval$interval, ylab="Steps (average)", xlab="Interval (x5min)", lwd=1, col="green", main="weekday")
 ```
+
+![](figure/panel plot-1.png) 
 
